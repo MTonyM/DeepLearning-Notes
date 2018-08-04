@@ -1,22 +1,38 @@
 # jemdoc: menu{MENU}{tsn.html}, nofooter
 = Teacher-Student Networks
-Taking the knowledge acquired by the nerual net and express the same knowledge in amodel that relies on */hierachical/* decisions instead, explaining a particular decision would be much easier.
+Taking the knowledge acquired by the nerual net and express the same knowledge in amodel that relies on */hierachical/* decisions instead, explaining a particular decision would be much easier.(interpretabilities)
 
-What is /hierachical/? This means levelled, if we have a sequence of decisions, we cound explain why our algorithm make the final decision, which is much easier to understand the algorithm.
+=== Some ideas.
+
+: {What is /hierachical/?} This means levelled, if we have a sequence of decisions, we cound explain why our algorithm make the final decision, which is much easier to understand the algorithm.
+: {What is /statistics regularities/?} This means, the trainig data may reflect the characteristics of the whole data distribution.
 == Distilling a Neural Network Into a Soft Decision Tree
+The authors introduced a novel way, to use a trained network to create a soft decision tree that generalizes better than one learned directly from the training data.
 
-Reading the Paper and the codes.
 - The paper is published in [https://arxiv.org/pdf/1711.09784.pdf arxiv].
 - The code are avaliable in [https://github.com/kimhc6028/soft-decision-tree/ Github repository] writen by kimhc6028.
 
-=== reading the paper
+=== introduction
+First, there are difficulties. Any particular feature activation in isolation has theirs margin effect depends on the effects of all the other units in the same layer. /Which means we should combine them to understand single neron's role/. So, a decision tree make classification based on sequence of decisions and each decision directly based on the input of the node. *But*, the decision trees do not generalize as well as deep nerual nets. So the nodes more deeper (nearer to leaf layer) will overfit unless the data is much large, Say, $O(exp(d))$ where $d$ is the depth of the tree.
 
+The authors gives a way of resolving both generalization and interpretabilities. Using trained model to train a decision tree to mimic the input-output function learning by DNN but a different framework. A simple way to understand it is there are large amount of unlabelled data, so we can created large amount of data to generate the labels coresponded to that data.
 
-
-
-
-You can control the behavior of a link: by default the link opens in a new web broswer tab, but by putting a slash (+\/+) character at the beginning of the link address you can make it open in the current web broswer tab.  
-
-For example, [mathjax.html \[mathjax.html\]] opens in a new web broswer tab, but [/mathjax.html \[\/mathjax.html\]] opens in the current web browser tab.  The link opening in a new tab is useful for linking an external website (like [http://www.google.com]), whereas the link opening in the current tab is useful for liking your jemdoc page (such as the page linked as a jemdoc menu item on the left panel).
-
-Unlike the link in the main text, a jemdoc menu item link on the left panel opens in the current tab by default, because you want to stay in the same tab while navigating menu items.  However, you can override this default behavior and make it open in a new tab by putting a backslash (+\\+) character in the beginning of the link of the menu item.  This is useful when putting an external website as a menu item.  See this usage in "Open in New Tab" menu item on the left panel, which is defined in MENU file.
+=== The Hierarchical Mixture of Bigots
+Each inner nodes $i$ learns a filter $\mathbf{w}_i$ and a bias $b_i$, for each leaf node $l$ learned a distribution $Q_l$. The probability take the left branch is $p_i(\mathbf{x}) = \sigma(\mathbf{xw}_i + b_i)$ where $\mathbf{x}$ is the input to the model. And the sigmoid logistic function.
+~~~
+{The function (1) writen in python}{python}
+#   self.fc = nn.Linear(self.args.input_dim, 1)
+#   def forward(self, x):
+#       return(F.sigmoid(self.beta*self.fc(x)))
+    def select_next(self, x):
+        prob = self.forward(x)
+        if prob < 0.5:
+            return(self.left, prob)
+        else:
+            return(self.right, prob)
+~~~
+The model is a hierachical mixture of bigots, which do not look at data. They just learn the hierachy of filters. each bigot learns a simple, static distribution over classes $k$.
+\(
+Q_k^l = \frac{exp(\phi_k^l)}{\sum_{k'}exp(\phi_k'^l)}
+\)
+each $Q^l$ is probability distribution at $l^\mathrm{th}$ leaf. $\phi$ is the learned parameter at that leaf.

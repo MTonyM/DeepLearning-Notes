@@ -3,7 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
 <head>
 <meta name="generator" content="jemdoc, see http://jemdoc.jaboc.net/" />
-<meta http-equiv="Content-Type" content="text/html;charset=GBK" />
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <link rel="stylesheet" href="jemdoc.css" type="text/css" />
 <title>Teacher-Student Networks</title>
 <!-- MathJax -->
@@ -32,21 +32,47 @@ MathJax.Hub.Config({
 <td id="layout-content">
 <div id="toptitle">
 <h1>Teacher-Student Networks</h1>
-<div id="subtitle">Taking the knowledge acquired by the nerual net and express the same knowledge in amodel that relies on <b><i>hierachical</i></b> decisions instead, explaining a particular decision would be much easier.</div>
+<div id="subtitle">Taking the knowledge acquired by the nerual net and express the same knowledge in amodel that relies on <b><i>hierachical</i></b> decisions instead, explaining a particular decision would be much easier.(interpretabilities)</div>
 </div>
-<p>What is hierachical? �ȼ��ģ�Ҳ����˵�����������ľ��ߵõ����յľ��߿�������������н����ԡ�</p>
+<h3>Some ideas.</h3>
+<dl>
+<dt>What is <i>hierachical</i>?</dt>
+<dd><p>This means levelled, if we have a sequence of decisions, we cound explain why our algorithm make the final decision, which is much easier to understand the algorithm.</p></dd>
+<dt>What is <i>statistics regularities</i>?</dt>
+<dd><p>This means, the trainig data may reflect the characteristics of the whole data distribution.</p></dd>
+</dl>
 <h2>Distilling a Neural Network Into a Soft Decision Tree</h2>
-<p>Reading the Paper and the codes.</p>
+<p>The authors introduced a novel way, to use a trained network to create a soft decision tree that generalizes better than one learned directly from the training data.</p>
 <ul>
 <li><p>The paper is published in <a href="https://arxiv.org/pdf/1711.09784.pdf" target=&ldquo;blank&rdquo;>arxiv</a>.</p>
 </li>
 <li><p>The code are avaliable in <a href="https://github.com/kimhc6028/soft-decision-tree/" target=&ldquo;blank&rdquo;>Github repository</a> writen by kimhc6028.</p>
 </li>
 </ul>
-<h3>reading the paper</h3>
-<p>You can control the behavior of a link: by default the link opens in a new web broswer tab, but by putting a slash (<tt>/</tt>) character at the beginning of the link address you can make it open in the current web broswer tab.  </p>
-<p>For example, <a href="mathjax.html" target=&ldquo;blank&rdquo;>[mathjax.html]</a> opens in a new web broswer tab, but <a href="mathjax.html">[/mathjax.html]</a> opens in the current web browser tab.  The link opening in a new tab is useful for linking an external website (like <a href="http://www.google.com" target=&ldquo;blank&rdquo;>http://www.google.com</a>), whereas the link opening in the current tab is useful for liking your jemdoc page (such as the page linked as a jemdoc menu item on the left panel).</p>
-<p>Unlike the link in the main text, a jemdoc menu item link on the left panel opens in the current tab by default, because you want to stay in the same tab while navigating menu items.  However, you can override this default behavior and make it open in a new tab by putting a backslash (<tt>\</tt>) character in the beginning of the link of the menu item.  This is useful when putting an external website as a menu item.  See this usage in &ldquo;Open in New Tab&rdquo; menu item on the left panel, which is defined in MENU file.</p>
+<h3>introduction</h3>
+<p>First, there are difficulties. Any particular feature activation in isolation has theirs margin effect depends on the effects of all the other units in the same layer. <i>Which means we should combine them to understand single neron's role</i>. So, a decision tree make classification based on sequence of decisions and each decision directly based on the input of the node. <b>But</b>, the decision trees do not generalize as well as deep nerual nets. So the nodes more deeper (nearer to leaf layer) will overfit unless the data is much large, Say, \(O(exp(d))\) where \(d\) is the depth of the tree.</p>
+<p>The authors gives a way of resolving both generalization and interpretabilities. Using trained model to train a decision tree to mimic the input-output function learning by DNN but a different framework. A simple way to understand it is there are large amount of unlabelled data, so we can created large amount of data to generate the labels coresponded to that data.</p>
+<h3>The Hierarchical Mixture of Bigots</h3>
+<p>Each inner nodes \(i\) learns a filter \(\mathbf{w}_i\) and a bias \(b_i\), for each leaf node \(l\) learned a distribution \(Q_l\). The probability take the left branch is \(p_i(\mathbf{x}) = \sigma(\mathbf{xw}_i + b_i)\) where \(\mathbf{x}\) is the input to the model. And the sigmoid logistic function.</p>
+<div class="codeblock">
+<div class="blocktitle">The function (1) writen in python</div>
+<div class="blockcontent"><pre>
+<span class="comment">#   self.fc = nn.Linear(self.args.input_dim, 1)</span>
+<span class="comment">#   <span class="statement">def</span> forward(self, x):</span>
+<span class="comment">#       <span class="statement">return</span>(F.sigmoid(self.beta*self.fc(x)))</span>
+    <span class="statement">def</span> select_next(self, x):
+        prob = self.forward(x)
+        <span class="statement">if</span> prob &lt; 0.5:
+            <span class="statement">return</span>(self.left, prob)
+        <span class="statement">else</span>:
+            <span class="statement">return</span>(self.right, prob)
+</pre></div></div>
+<p>The model is a hierachical mixture of bigots, which do not look at data. They just learn the hierachy of filters. each bigot learns a simple, static distribution over classes \(k\).</p>
+<p style="text-align:center">
+\[
+Q_k^l = \frac{exp(\phi_k^l)}{\sum_{k&rsquo;}exp(\phi_k&rsquo;^l)}
+\]
+</p><p>each \(Q^l\) is probability distribution at \(l^\mathrm{th}\) leaf. \(\phi\) is the learned parameter at that leaf.</p>
 </td>
 </tr>
 </table>
